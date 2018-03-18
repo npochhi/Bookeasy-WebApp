@@ -91,4 +91,8 @@ def signup(request):
     else:
         return render(request, 'signup.html')
 
-def 
+def student_approved_bookings(request):
+    try:
+        
+    except:
+        return redirect('/')

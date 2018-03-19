@@ -48,6 +48,11 @@ class Guest(models.Model):
     email = models.EmailField()
     name = models.CharField(max_length = 30)
 
+class GuestHouse(models.Model):
+    name = models.CharField(max_length = 30)
+    address = models.CharField(max_length = 100, blank = True)
+    PhNo = models.CharField(max_length = 10)
+
 class Bookings(models.Model):
     category_choices = (
         ('A', 'A'),
@@ -55,6 +60,32 @@ class Bookings(models.Model):
         ('C', 'C'),
         ('D', 'D'),
     )
+    room_choices = (
+        ('ACS', 'AC Single'),
+        ('NACS', 'Non AC Single'),
+        ('ACD', 'AC Double'),
+        ('NACD', 'Non AC Double'),
+    )
+
+    no_rooms = models.IntegerField()
+    guests = models.ManyToManyField(Guest, null = True)
+    category = models.CharField(max_length = 1, choices = category_choices)
+    purpose = models.CharField(max_length = 50, blank = True)
+    doarrival = models.DateTimeField()
+    dodeparture = models.DateTimeField()
+    dobooking = models.DateTimeField()
+    guestHouse = models.ForeignKey(GuestHouse)
+    room_type = models.CharField(max_length = 4, choices = room_choices)
+    booker = models.ForeignKey(UserProfile, on_delete = models.CASCADE, null = True)
+
+class ApprovedBookings(models.Model):
+    booking_id = models.OneToOneModel(Bookings, primary_key = True)
+
+class DisapprovedBookings(models.Model):
+    booking_id = models.OneToOneField(Bookings, primary_key = True)
+    reason = models.CharField(max_length = 100, blank = True)
+
+class Rooms(models.Model):
     room_choices = (
         ('SIN', 'Single'),
         ('DOB', 'Double'),
@@ -65,18 +96,6 @@ class Bookings(models.Model):
         ('SUIT', 'Suit')
     )
 
-    guests = models.ManyToManyModel(Guest)
-    category = models.CharField(max_length = 1, choices = category_choices)
-    purpose = models.CharField(max_length = 50, blank = True)
-    doarrival = models.DateField()
-    dodeparture = models.DateField()
-    dobooking = models.DateField()
+    gID = models.ForeignKey(GuestHouse)
     room_type = models.CharField(max_length = 4, choices = room_choices)
-    booker = models.ForeignKey(UserProfile, on_delete = models.CASCADE)
-
-class ApprovedBookings(models.Model):
-    booking_id = models.OneToOneModel(Bookings)
-
-class DisapprovedBookings(models.Model):
-    booking_id = models.OneToOneModel(Bookings, primary_key = True)
-    reason = models.CharField(max_length = 100, blank = True)
+    no_available = models.IntegerField()

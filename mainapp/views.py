@@ -5,6 +5,7 @@ from django.views.decorators import csrf
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.core.exceptions import *
+from django.utils.dateparse import parse_datetime
 import datetime
 
 # Create your views here.
@@ -21,7 +22,7 @@ def home(request):
             context = {
                 'name': employeename.name
             }
-            return render(request, 'employeehome.html')
+            return render(request, 'employeehome.html', context)
     else:
         return render(request, 'login.html')
 
@@ -91,8 +92,69 @@ def signup(request):
     else:
         return render(request, 'signup.html')
 
-def student_approved_bookings(request):
+def make_booking(request):
     try:
-        
+        email = request.session['id']
+        guesthouse = request.POST.get('guesthouse')
+        category = request.POST.get('category')
+        purpose = request.POST.get('purpose')
+        doarrival = request.POST.get('doa') 
+        dodeparture = request.POST.get('dod')
+        dobooking = datetime.datetime.now()
+        room_type = request.POST.get('room_type')
+        no_rooms = request.POST.get('no_rooms')
+        guests = []
+
+        no_occ = 0
+        list_disapprovals = list(DisapprovedBookings.objects.all())
+        list_bookings_till_now = list(Bookings.objects.filter(dodeparture__gte = datetime.datetime.now(), category = category))
+        for booking in list_bookings_till_now:
+            count = 0
+            for disappbooking in list_disapprovals:
+                if disappbooking.booking_id.id = booking.id:
+                    count += 1
+            if count == 0:
+                no_occ += 1       
+
+        guesthouse_obj = GuestHouse.objects.get(name = guesthouse)
+        guesthouse_id = guesthouse_obj.id
+        guesthouse_max_occ = Rooms.objects.get(gID = guesthouse_obj, room_type = category).no_available
+
+        if no_occ == guesthouse_max_occ:
+            messages.error('Guesthouse full! Either select other category or change the GuestHouse')
+            return redirect('/signup/') 
+
+        for i in range(int(request.POST.get('no_guests'))):
+            guest = Guest(email = request.POST.get('guest' + str(i)), name = request.POST.get('name' + str(i)))
+            guests += [guest]
+            guest.save()
+        booking = Bookings(
+            category = category, 
+            purpose = purpose, 
+            doarrival = parse_datetime(doarrival),
+            dodeparture = parse_datetime(dodeparture),
+            dobooking = parse_datetime(dobooking),
+            room_type = room_type
+        )
+        for guest in guests:
+            booking.guests.add(guest)
+        booking.booker.add(UserProfile.objects.get(email = email))
+        booking.save()
+        return redirect('/')
     except:
         return redirect('/')
+
+def approve(request):
+    booking_id = request.POST['id']
+    booking = Bookings.objects.get(id = booking_id)
+    app_booking = ApprovedBookings(booking_id = booking)
+    app_booking.save()
+    return redirect('/bookingstoapprove')
+
+def disapprove(request):
+    booking_id = request.POST['id']
+    reason = request.POST['reason']
+    booking = Bookings.objects.get(id = booking_id)
+    disapp_booking = DisapprovedBookings(booking_id = booking, reason = reason)
+    disapp_booking.save()
+    return redirect('/bookingstoapprove')

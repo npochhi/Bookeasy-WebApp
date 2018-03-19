@@ -111,13 +111,12 @@ def make_booking(request):
         for booking in list_bookings_till_now:
             count = 0
             for disappbooking in list_disapprovals:
-                if disappbooking.booking_id.id = booking.id:
+                if disappbooking.booking_id.id == booking.id:
                     count += 1
             if count == 0:
                 no_occ += 1       
 
         guesthouse_obj = GuestHouse.objects.get(name = guesthouse)
-        guesthouse_id = guesthouse_obj.id
         guesthouse_max_occ = Rooms.objects.get(gID = guesthouse_obj, room_type = category).no_available
 
         if no_occ == guesthouse_max_occ:

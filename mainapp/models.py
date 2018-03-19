@@ -21,7 +21,7 @@ class Employee(models.Model):
         ('LABT', 'Lab Technician'),
         ('ACCO', 'Accountant'),
         ('PROJ', 'Project Officer'),
-    )
+    )   
 
     ID = models.CharField(max_length = 20, unique = True)
     email = models.EmailField(primary_key = True)
@@ -74,15 +74,15 @@ class Bookings(models.Model):
     doarrival = models.DateTimeField()
     dodeparture = models.DateTimeField()
     dobooking = models.DateTimeField()
-    guestHouse = models.ForeignKey(GuestHouse)
+    guestHouse = models.ForeignKey(GuestHouse, on_delete = models.CASCADE)
     room_type = models.CharField(max_length = 4, choices = room_choices)
     booker = models.ForeignKey(UserProfile, on_delete = models.CASCADE, null = True)
 
 class ApprovedBookings(models.Model):
-    booking_id = models.OneToOneModel(Bookings, primary_key = True)
+    booking_id = models.OneToOneField(Bookings, primary_key = True, on_delete = models.CASCADE)
 
 class DisapprovedBookings(models.Model):
-    booking_id = models.OneToOneField(Bookings, primary_key = True)
+    booking_id = models.OneToOneField(Bookings, primary_key = True, on_delete = models.CASCADE)
     reason = models.CharField(max_length = 100, blank = True)
 
 class Rooms(models.Model):
@@ -96,6 +96,6 @@ class Rooms(models.Model):
         ('SUIT', 'Suit')
     )
 
-    gID = models.ForeignKey(GuestHouse)
+    gID = models.ForeignKey(GuestHouse, on_delete = models.CASCADE)
     room_type = models.CharField(max_length = 4, choices = room_choices)
     no_available = models.IntegerField()

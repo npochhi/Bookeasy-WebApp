@@ -55,28 +55,33 @@ def login(request):
 def signup(request):
     if request.method == 'POST':
         email = request.POST.get('emailid')
+        print(email)
         pass1 = request.POST.get('pass1')
+        print(pass1)
         pass2 = request.POST.get('pass2')
+        print(pass2)
         try:
             Student.objects.get(email = email)
             try:
                 UserProfile.objects.get(email = email)
-                messages.error('An account with this email id already exists in the database!')
+                messages.error(request, 'An account with this email id already exists in the database!')
                 return redirect('/signup')
             except:
                 if pass1 == pass2:
                     user = UserProfile(email = email, password = pass1)
                     user.save()
-                    return redirect('/')
+                    print("here")
+                    messages.error(request, 'User successfully created!')
+                    return redirect('/signup')
                 else:
-                    messages.error('Passwords do not match!')
+                    messages.error(request, 'Passwords do not match!')
                     return redirect('/signup')
         except:
             try:
                 Employee.objects.get(email = email)
                 try:
                     UserProfile.objects.get(email = email)
-                    messages.error('An account with this email id already exists in the database!')
+                    messages.error(request, 'An account with this email id already exists in the database!')
                     return redirect('/signup')
                 except:
                     if pass1 == pass2:
@@ -84,11 +89,11 @@ def signup(request):
                         user.save()
                         return redirect('/')
                     else:
-                        messages.error('Passwords do not match!')
+                        messages.error(request, 'Passwords do not match!')
                         return redirect('/signup')
             except:
-                messages.error('No such email id exists in our database!')
-                return redirect('/signup')
+                messages.error(request, 'No such email id exists in our database!')
+                return redirect('/signup/')
     else:
         return render(request, 'signup.html')
 
@@ -120,7 +125,7 @@ def make_booking(request):
         guesthouse_max_occ = Rooms.objects.get(gID = guesthouse_obj, room_type = category).no_available
 
         if no_occ == guesthouse_max_occ:
-            messages.error('Guesthouse full! Either select other category or change the GuestHouse')
+            messages.error(request, 'Guesthouse full! Either select other category or change the GuestHouse')
             return redirect('/signup/') 
 
         for i in range(int(request.POST.get('no_guests'))):

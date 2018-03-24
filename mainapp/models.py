@@ -6,6 +6,13 @@ class UserProfile(models.Model):
     email = models.EmailField(primary_key = True)
     password = models.CharField(max_length = 30, unique = True)
     authenticated = models.BooleanField(default = False)
+    institute_id = models.CharField(max_length=30, default="")
+    name = models.CharField(max_length=30, default="")
+    def check_pass(self, passw):
+        if passw == self.password:
+            return True
+        else:
+            return False
     
 class Student(models.Model):
     ID = models.CharField(max_length = 20, unique = True)

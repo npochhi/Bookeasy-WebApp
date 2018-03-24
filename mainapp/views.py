@@ -7,7 +7,9 @@ from django.contrib import messages
 from django.core.exceptions import *
 from django.utils.dateparse import parse_datetime
 import datetime
+from django.views.decorators.cache import never_cache
 
+@never_cache
 # Create your views here.
 def home(request):
     if 'id' in request.session.keys():
@@ -26,6 +28,7 @@ def home(request):
     else:
         return render(request, 'login.html')
 
+@never_cache
 def login(request):
     if request.method == 'POST':
         email = request.POST.get('emailid')
@@ -52,6 +55,7 @@ def login(request):
     else:
         return render(request, 'login.html')
 
+@never_cache
 def signup(request):
     if request.method == 'POST':
         email = request.POST.get('emailid')
@@ -61,14 +65,14 @@ def signup(request):
         pass2 = request.POST.get('pass2')
         print(pass2)
         try:
-            Student.objects.get(email = email)
+            studentobj = Student.objects.get(email = email)
             try:
                 UserProfile.objects.get(email = email)
                 messages.error(request, 'An account with this email id already exists in the database!')
                 return redirect('/signup')
             except:
                 if pass1 == pass2:
-                    user = UserProfile(email = email, password = pass1)
+                    user = UserProfile(email = email, password = pass1, name = studentobj.name, institute_id = studentobj.ID)
                     user.save()
                     print("here")
                     messages.error(request, 'User successfully created!')
@@ -78,16 +82,17 @@ def signup(request):
                     return redirect('/signup')
         except:
             try:
-                Employee.objects.get(email = email)
+                employeeobj = Employee.objects.get(email = email)
                 try:
                     UserProfile.objects.get(email = email)
                     messages.error(request, 'An account with this email id already exists in the database!')
                     return redirect('/signup')
                 except:
                     if pass1 == pass2:
-                        user = UserProfile(email = email, password = pass1)
+                        user = UserProfile(email = email, password = pass1, name = employeeobj.name, institute_id = employeeobj.ID)
                         user.save()
-                        return redirect('/')
+                        messages.error(request, 'User successfully created!')
+                        return redirect('/signup')
                     else:
                         messages.error(request, 'Passwords do not match!')
                         return redirect('/signup')
@@ -97,6 +102,7 @@ def signup(request):
     else:
         return render(request, 'signup.html')
 
+@never_cache
 def make_booking(request):
     try:
         email = request.session['id']
@@ -148,6 +154,7 @@ def make_booking(request):
     except:
         return redirect('/')
 
+@never_cache
 def approve(request):
     booking_id = request.POST['id']
     booking = Bookings.objects.get(id = booking_id)
@@ -155,6 +162,7 @@ def approve(request):
     app_booking.save()
     return redirect('/bookingstoapprove')
 
+@never_cache
 def disapprove(request):
     booking_id = request.POST['id']
     reason = request.POST['reason']
@@ -162,3 +170,43 @@ def disapprove(request):
     disapp_booking = DisapprovedBookings(booking_id = booking, reason = reason)
     disapp_booking.save()
     return redirect('/bookingstoapprove')
+
+def logout(request):
+    del request.session['id']
+    del request.session['type']
+    request.session.modified = True
+    return render(request, 'logout.html')
+
+@never_cache
+def bookings_for_approval(request):
+    d = []
+    try:
+        print("Hello1")
+        employee = Employee.objects.get(email = request.session['id'])
+        approval_entity = list(ApprovalEntity.objects.all())
+        bookings = list(Bookings.objects.all())
+        for approval_e in approval_entity:
+            print(approval_e.approval_ID)
+            if approval_e.approval_ID.email == employee.email:
+                print(str(approval_e.approval_ID) + "Debug")
+                for book in bookings:
+                    print(book.doarrival.date)
+                    print(datetime.date.today())
+                    if approval_e.user_ID == book.booker and book.doarrival.date() > datetime.date.today():
+                        try:
+                            temp = ApprovedBookings.objects.get(booking_id = book)
+                        except:
+                            try:
+                                temp = DisapprovedBookings.objects.get(booking_id = book)
+                            except:
+                                #print(book)
+                                d.append(book)
+        context = {
+            'list' : d
+        }
+        return render(request, 'bookings_to_approve.html', context)
+    except:
+        context = {
+            'list' : d
+        }
+        return render(request, 'bookings_to_approve.html', context)

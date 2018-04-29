@@ -56,7 +56,7 @@ class Guest(models.Model):
     name = models.CharField(max_length = 30)
 
 class GuestHouse(models.Model):
-    name = models.CharField(max_length = 30)
+    name = models.CharField(max_length = 30, unique = True)
     address = models.CharField(max_length = 100, blank = True)
     PhNo = models.CharField(max_length = 10)
 
